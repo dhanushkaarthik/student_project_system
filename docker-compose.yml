@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: spems_web
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - SECRET_KEY=production-secure-random-key-change-in-prod
+      - FLASK_ENV=production
+    volumes:
+      - app_uploads:/app/uploads
+      - app_instance:/app/instance
+
+volumes:
+  app_uploads:
+  app_instance:
