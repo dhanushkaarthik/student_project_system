@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Sign In{% endblock %}
+
+{% block public_content %}
+<div class="auth-wrapper">
+    <div class="auth-card card p-4 p-md-5">
+        <div class="text-center mb-4">
+            <div class="d-inline-flex p-3 rounded-circle bg-primary bg-opacity-10 text-primary mb-3">
+                <i class="bi bi-mortarboard-fill fs-2"></i>
+            </div>
+            <h3 class="fw-bold text-dark">Welcome to SPEMS</h3>
+            <p class="text-muted small">Student Project Submission & Evaluation System</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.login', next=request.args.get('next')) }}">
+            {{ form.hidden_tag() }}
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold small text-muted">{{ form.email.label.text }}</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-envelope text-muted"></i></span>
+                    {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), placeholder="name@college.edu", id="loginEmail") }}
+                </div>
+                {% for err in form.email.errors %}
+                <div class="text-danger small mt-1">{{ err }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <label class="form-label fw-semibold small text-muted">{{ form.password.label.text }}</label>
+                </div>
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-lock text-muted"></i></span>
+                    {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), placeholder="••••••••", id="loginPassword") }}
+                </div>
+                {% for err in form.password.errors %}
+                <div class="text-danger small mt-1">{{ err }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="mb-4 form-check">
+                {{ form.remember_me(class="form-check-input") }}
+                <label class="form-check-label small text-muted" for="remember_me">Remember my session</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm">
+                <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
+            </button>
+        </form>
+
+        <div class="mt-4 pt-3 border-top text-center">
+            <p class="small text-muted mb-0">
+                Are you a new student? 
+                <a href="{{ url_for('auth.register') }}" class="fw-semibold text-primary text-decoration-none">Create Account</a>
+            </p>
+        </div>
+
+        <!-- Quick Demo Credentials Box -->
+        <div class="mt-4 p-3 bg-light rounded-3 border">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="fw-bold small text-dark"><i class="bi bi-key-fill text-warning me-1"></i> Demo Credentials:</span>
+                <span class="badge bg-secondary" style="font-size: 0.7rem;">Click to Autofill</span>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2" onclick="fillCreds('admin@college.edu', 'Admin@123')">
+                    Admin
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-info py-0 px-2" onclick="fillCreds('sarah.faculty@college.edu', 'Faculty@123')">
+                    Faculty (CS)
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-success py-0 px-2" onclick="fillCreds('alex.student@college.edu', 'Student@123')">
+                    Student
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function fillCreds(email, pw) {
+    document.getElementById('loginEmail').value = email;
+    document.getElementById('loginPassword').value = pw;
+}
+</script>
+{% endblock %}

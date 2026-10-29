@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Evaluation & Performance Reports{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+        <h4 class="fw-bold mb-1"><i class="bi bi-file-earmark-bar-graph-fill text-primary me-2"></i>Evaluation & Performance Reports</h4>
+        <p class="text-muted small mb-0">Generate, analyze, filter, export CSV, and print official performance reports</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('reports.printable', assignment_id=selected_assignment, department=selected_department) }}" target="_blank" class="btn btn-outline-secondary">
+            <i class="bi bi-printer me-1"></i> Printable Report
+        </a>
+        <a href="{{ url_for('reports.export_csv', assignment_id=selected_assignment, department=selected_department) }}" class="btn btn-success">
+            <i class="bi bi-file-earmark-excel me-1"></i> Export to CSV
+        </a>
+    </div>
+</div>
+
+<!-- Filters Card -->
+<div class="card p-3 border-0 shadow-sm mb-4">
+    <form method="GET" action="{{ url_for('reports.index') }}" class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold text-muted mb-1">Filter by Assignment</label>
+            <select name="assignment_id" class="form-select form-select-sm">
+                <option value="">-- All Assignments --</option>
+                {% for a in assignments %}
+                <option value="{{ a.id }}" {% if selected_assignment == a.id %}selected{% endif %}>
+                    {{ a.title }} ({{ a.department }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small fw-semibold text-muted mb-1">Filter by Department</label>
+            <select name="department" class="form-select form-select-sm">
+                <option value="all" {% if selected_department == 'all' %}selected{% endif %}>All Departments</option>
+                <option value="Computer Science" {% if selected_department == 'Computer Science' %}selected{% endif %}>Computer Science</option>
+                <option value="Information Technology" {% if selected_department == 'Information Technology' %}selected{% endif %}>Information Technology</option>
+                <option value="Electronics & Communication" {% if selected_department == 'Electronics & Communication' %}selected{% endif %}>Electronics & Communication</option>
+                <option value="Electrical & Electronics" {% if selected_department == 'Electrical & Electronics' %}selected{% endif %}>Electrical & Electronics</option>
+                <option value="Mechanical Engineering" {% if selected_department == 'Mechanical Engineering' %}selected{% endif %}>Mechanical Engineering</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small fw-semibold text-muted mb-1">From Date</label>
+            <input type="date" name="date_from" class="form-control form-control-sm" value="{{ date_from }}">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small fw-semibold text-muted mb-1">To Date</label>
+            <input type="date" name="date_to" class="form-control form-control-sm" value="{{ date_to }}">
+        </div>
+        <div class="col-md-1">
+            <button type="submit" class="btn btn-primary btn-sm w-100">Filter</button>
+        </div>
+    </form>
+</div>
+
+<!-- Report Summary Data Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold text-dark mb-0">Filtered Report Results</h5>
+        <span class="badge bg-primary rounded-pill px-3 py-1">{{ submissions|length }} Records</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Register No</th>
+                    <th>Department</th>
+                    <th>Assignment</th>
+                    <th>Submission Date</th>
+                    <th>Timing</th>
+                    <th>Status</th>
+                    <th>Marks Awarded</th>
+                    <th>Percentage</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in submissions %}
+                <tr>
+                    <td class="fw-semibold text-dark">{{ s.student.name }}</td>
+                    <td>{{ s.student.register_no or 'N/A' }}</td>
+                    <td><span class="badge bg-light text-dark border">{{ s.student.department or 'N/A' }}</span></td>
+                    <td>{{ s.assignment.title }}</td>
+                    <td><small class="text-muted">{{ s.submitted_at|datetimeformat('%Y-%m-%d %H:%M') }}</small></td>
+                    <td>
+                        {% if s.is_late %}
+                        <span class="badge bg-danger">Late</span>
+                        {% else %}
+                        <span class="badge bg-success">On-Time</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="{{ s.status|status_badge }}">{{ s.status }}</span></td>
+                    <td>
+                        {% if s.evaluation %}
+                        <span class="fw-bold text-success">{{ s.evaluation.marks }}</span> / {{ s.assignment.max_marks }}
+                        {% else %}
+                        <span class="text-muted small">Not graded</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if s.evaluation %}
+                        <span class="fw-semibold">{{ (s.evaluation.marks / s.assignment.max_marks * 100)|round(1) }}%</span>
+                        {% else %}
+                        <span class="text-muted small">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="9" class="text-center py-5 text-muted">
+                        No submissions match the selected report filter criteria.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% block title %}{{ assignment.title }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary btn-sm mb-3">
+        <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+    </a>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-2">
+        <div>
+            <h4 class="fw-bold mb-1">{{ assignment.title }}</h4>
+            <div class="d-flex flex-wrap gap-2 text-muted small align-items-center">
+                <span><i class="bi bi-person-badge me-1"></i>Prof. {{ assignment.faculty.name }}</span>
+                <span>•</span>
+                <span><i class="bi bi-building me-1"></i>{{ assignment.department }} (Year {{ assignment.year }})</span>
+                <span>•</span>
+                <span><i class="bi bi-award me-1"></i>Max Marks: {{ assignment.max_marks }}</span>
+            </div>
+        </div>
+        <div class="text-md-end">
+            <span class="badge {% if assignment.allow_late %}bg-info text-dark{% else %}bg-secondary{% endif %}">
+                {% if assignment.allow_late %}Late Submissions Allowed{% else %}Strict Deadline (No Late Submissions){% endif %}
+            </span>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Details & Evaluation -->
+    <div class="col-lg-7">
+        <!-- Assignment Instructions Card -->
+        <div class="card p-4 border-0 shadow-sm mb-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-file-text text-primary me-2"></i>Assignment Instructions</h5>
+            <div class="p-3 bg-light rounded-3 mb-3" style="white-space: pre-wrap;">{{ assignment.description }}</div>
+
+            {% if assignment.attachment_path %}
+            <div class="border rounded-3 p-3 d-flex align-items-center justify-content-between bg-white">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="bi bi-paperclip fs-4 text-primary"></i>
+                    <div>
+                        <div class="fw-semibold small text-dark">{{ assignment.attachment_filename }}</div>
+                        <small class="text-muted">Faculty Guide / Problem Statement</small>
+                    </div>
+                </div>
+                <a href="{{ url_for('student.download_assignment_attachment', assignment_id=assignment.id) }}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-download me-1"></i> Download
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Evaluation Results Card (If evaluated) -->
+        {% if latest_sub and latest_sub.evaluation %}
+        <div class="card p-4 border-0 shadow-sm border-start border-4 border-success mb-4">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 class="fw-bold text-dark mb-0"><i class="bi bi-award-fill text-success me-2"></i>Faculty Evaluation & Marks</h5>
+                <span class="{{ latest_sub.status|status_badge }}">{{ latest_sub.status }}</span>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-sm-6">
+                    <div class="p-3 bg-light rounded-3 text-center">
+                        <span class="text-muted small d-block">Score Obtained</span>
+                        <h2 class="fw-bold text-success mb-0">{{ latest_sub.evaluation.marks }} <span class="fs-6 text-muted">/ {{ assignment.max_marks }}</span></h2>
+                        <small class="text-muted">{{ (latest_sub.evaluation.marks / assignment.max_marks * 100)|round(1) }}%</small>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="p-3 bg-light rounded-3">
+                        <span class="text-muted small d-block">Evaluated By</span>
+                        <div class="fw-semibold text-dark">{{ latest_sub.evaluation.faculty.name }}</div>
+                        <small class="text-muted">{{ latest_sub.evaluation.evaluated_at|datetimeformat }}</small>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="fw-semibold small text-muted mb-1">Faculty Feedback:</label>
+                <div class="p-3 bg-light rounded-3 border-start border-3 border-info" style="white-space: pre-wrap;">{{ latest_sub.evaluation.feedback }}</div>
+            </div>
+        </div>
+        {% elif latest_sub and latest_sub.status == 'Needs Revision' %}
+        <div class="card p-4 border-0 shadow-sm border-start border-4 border-warning mb-4">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <h5 class="fw-bold text-dark mb-0"><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Resubmission Requested</h5>
+                <span class="badge bg-warning text-dark">Needs Revision</span>
+            </div>
+            <p class="text-muted small mb-3">Faculty has requested revisions. Please review comments and upload a new version.</p>
+            {% if latest_sub.evaluation %}
+            <div class="p-3 bg-light rounded-3 mb-2" style="white-space: pre-wrap;">{{ latest_sub.evaluation.feedback }}</div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Version History Table -->
+        {% if all_versions %}
+        <div class="card p-4 border-0 shadow-sm">
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-clock-history text-primary me-2"></i>Your Submission Versions</h5>
+            <div class="table-responsive">
+                <table class="table align-middle table-sm">
+                    <thead>
+                        <tr>
+                            <th>Version</th>
+                            <th>Submitted At</th>
+                            <th>Timing</th>
+                            <th>Status</th>
+                            <th>Files</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sub in all_versions %}
+                        <tr {% if sub.is_latest %}class="table-light fw-medium"{% endif %}>
+                            <td>
+                                Version {{ sub.version }}
+                                {% if sub.is_latest %}<span class="badge bg-primary ms-1" style="font-size: 0.7rem;">Latest</span>{% endif %}
+                            </td>
+                            <td>{{ sub.submitted_at|datetimeformat }}</td>
+                            <td>
+                                {% if sub.is_late %}
+                                <span class="badge bg-danger">Late</span>
+                                {% else %}
+                                <span class="badge bg-success">On-Time</span>
+                                {% endif %}
+                            </td>
+                            <td><span class="{{ sub.status|status_badge }}">{{ sub.status }}</span></td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('student.download_submission_file', submission_id=sub.id, file_type='report') }}" class="btn btn-outline-danger" title="Download Report PDF">
+                                        <i class="bi bi-file-earmark-pdf"></i>
+                                    </a>
+                                    <a href="{{ url_for('student.download_submission_file', submission_id=sub.id, file_type='code') }}" class="btn btn-outline-primary" title="Download Code ZIP">
+                                        <i class="bi bi-file-earmark-zip"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Right Column: Submission Form & Deadline Info -->
+    <div class="col-lg-5">
+        <!-- Deadline Timer Card -->
+        <div class="card p-4 border-0 shadow-sm mb-4">
+            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-alarm text-primary me-2"></i>Deadline Status</h6>
+            <div class="text-muted small mb-2">Deadline: {{ assignment.deadline|datetimeformat('%A, %B %d, %Y at %I:%M %p') }}</div>
+            <div class="countdown-timer fs-5 py-2 text-center" data-deadline="{{ assignment.deadline.isoformat() }}"></div>
+        </div>
+
+        <!-- Submission Upload Card -->
+        <div class="card p-4 border-0 shadow-sm">
+            <h5 class="fw-bold text-dark mb-3">
+                <i class="bi bi-upload text-primary me-2"></i>
+                {% if latest_sub %}Submit Revision / Update{% else %}Submit Project{% endif %}
+            </h5>
+
+            {% if is_late_now and not assignment.allow_late %}
+            <div class="alert alert-danger">
+                <i class="bi bi-x-circle-fill me-2"></i>
+                <strong>Submissions Closed:</strong> The deadline has expired and this assignment does not permit late uploads.
+            </div>
+            {% else %}
+                {% if is_late_now %}
+                <div class="alert alert-warning small">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                    <strong>Notice:</strong> The deadline has passed. Late submission is enabled, but your submission will be marked with a <strong>Late</strong> tag.
+                </div>
+                {% endif %}
+
+                <form method="POST" action="{{ url_for('student.submit_assignment', assignment_id=assignment.id) }}" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-muted">
+                            <i class="bi bi-file-earmark-pdf text-danger me-1"></i>Project Report (PDF only, max 10MB) *
+                        </label>
+                        {{ form.report_file(class="form-control", accept=".pdf,application/pdf", required=True) }}
+                        <div class="form-text small">Accepted format: <code>.pdf</code></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-muted">
+                            <i class="bi bi-file-earmark-zip text-primary me-1"></i>Source Code Archive (ZIP only, max 25MB) *
+                        </label>
+                        {{ form.code_file(class="form-control", accept=".zip,application/zip,application/x-zip-compressed", required=True) }}
+                        <div class="form-text small">Accepted format: <code>.zip</code></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-muted">Remarks / Student Notes (Optional)</label>
+                        {{ form.remarks(class="form-control", rows="3", placeholder="Any instructions to run code, GitHub link, team member notes, etc.") }}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                        <i class="bi bi-cloud-arrow-up-fill me-1"></i>
+                        {% if latest_sub %}Upload Resubmission{% else %}Upload & Complete Submission{% endif %}
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

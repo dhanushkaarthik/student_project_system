@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block title %}User Management{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+        <h4 class="fw-bold mb-1"><i class="bi bi-people-fill text-primary me-2"></i>User Management</h4>
+        <p class="text-muted small mb-0">Create, edit, reset passwords, activate/deactivate, and manage permissions for all system accounts</p>
+    </div>
+    <div>
+        <a href="{{ url_for('admin.new_user') }}" class="btn btn-primary">
+            <i class="bi bi-person-plus-fill me-1"></i> Add New User
+        </a>
+    </div>
+</div>
+
+<!-- Search & Filters -->
+<div class="card p-3 border-0 shadow-sm mb-4">
+    <form method="GET" class="row g-2 align-items-center">
+        <div class="col-md-5">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" name="search" class="form-control" placeholder="Search by name, email, or register number..." value="{{ search }}">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select name="role" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="all" {% if role_filter == 'all' %}selected{% endif %}>All Roles</option>
+                <option value="student" {% if role_filter == 'student' %}selected{% endif %}>Students</option>
+                <option value="faculty" {% if role_filter == 'faculty' %}selected{% endif %}>Faculty</option>
+                <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Administrators</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="department" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="all" {% if dept_filter == 'all' %}selected{% endif %}>All Departments</option>
+                <option value="Computer Science" {% if dept_filter == 'Computer Science' %}selected{% endif %}>Computer Science</option>
+                <option value="Information Technology" {% if dept_filter == 'Information Technology' %}selected{% endif %}>Information Technology</option>
+                <option value="Electronics & Communication" {% if dept_filter == 'Electronics & Communication' %}selected{% endif %}>Electronics & Communication</option>
+                <option value="Electrical & Electronics" {% if dept_filter == 'Electrical & Electronics' %}selected{% endif %}>Electrical & Electronics</option>
+                <option value="Mechanical Engineering" {% if dept_filter == 'Mechanical Engineering' %}selected{% endif %}>Mechanical Engineering</option>
+            </select>
+        </div>
+        <div class="col-md-1 text-end">
+            <a href="{{ url_for('admin.users') }}" class="btn btn-light btn-sm w-100" title="Reset Filters"><i class="bi bi-arrow-counterclockwise"></i></a>
+        </div>
+    </form>
+</div>
+
+<!-- Users Table -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Role</th>
+                    <th>Cohort / Dept</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>
+                        <div class="fw-semibold text-dark">{{ u.name }}</div>
+                        <small class="text-muted">{{ u.email }}{% if u.register_no %} • {{ u.register_no }}{% endif %}</small>
+                    </td>
+                    <td>
+                        <span class="badge badge-role-{{ u.role }} text-capitalize">{{ u.role }}</span>
+                    </td>
+                    <td>
+                        {% if u.department %}
+                        <div>{{ u.department }}</div>
+                        {% if u.year %}<small class="text-muted">Year {{ u.year }}</small>{% endif %}
+                        {% else %}
+                        <span class="text-muted small">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if u.is_active %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-danger">Deactivated</span>
+                        {% endif %}
+                    </td>
+                    <td><small class="text-muted">{{ u.created_at|datetimeformat('%b %d, %Y') }}</small></td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('admin.edit_user', user_id=u.id) }}" class="btn btn-outline-secondary" title="Edit User">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#resetPwModal-{{ u.id }}" title="Reset Password">
+                                <i class="bi bi-key"></i>
+                            </button>
+                            {% if u.id != current_user.id %}
+                            <form method="POST" action="{{ url_for('admin.toggle_user_status', user_id=u.id) }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-outline-info" title="Toggle Active / Deactivate">
+                                    <i class="bi bi-power"></i>
+                                </button>
+                            </form>
+                            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal-{{ u.id }}" title="Delete User">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+
+                        <!-- Reset Password Modal -->
+                        <div class="modal fade" id="resetPwModal-{{ u.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content text-start">
+                                    <form method="POST" action="{{ url_for('admin.reset_password', user_id=u.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <div class="modal-header">
+                                            <h6 class="modal-title fw-bold"><i class="bi bi-key-fill text-warning me-1"></i> Reset Password for {{ u.name }}</h6>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p class="text-muted small mb-3">Set a new temporary password for <strong>{{ u.email }}</strong>:</p>
+                                            <label class="form-label fw-semibold small text-muted">New Password</label>
+                                            <input type="text" name="new_password" class="form-control" value="Password@123" required minlength="6">
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-warning btn-sm">Confirm Reset</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Delete User Modal -->
+                        {% if u.id != current_user.id %}
+                        <div class="modal fade" id="deleteUserModal-{{ u.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content text-start">
+                                    <div class="modal-header">
+                                        <h6 class="modal-title fw-bold text-danger"><i class="bi bi-trash-fill me-1"></i> Delete User {{ u.name }}</h6>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Are you sure you want to delete user <strong>{{ u.email }}</strong>?
+                                        <div class="alert alert-danger small mt-2">
+                                            This action is irreversible and will remove all their records.
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                        <form method="POST" action="{{ url_for('admin.delete_user', user_id=u.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-danger btn-sm">Yes, Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">No users found matching your criteria.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if pagination.pages > 1 %}
+<nav aria-label="User navigation">
+    <ul class="pagination justify-content-center">
+        {% if pagination.has_prev %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('admin.users', page=pagination.prev_num, role=role_filter, department=dept_filter, search=search) }}">Previous</a>
+        </li>
+        {% endif %}
+        {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if p %}
+                <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.users', page=p, role=role_filter, department=dept_filter, search=search) }}">{{ p }}</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+        {% endfor %}
+        {% if pagination.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('admin.users', page=pagination.next_num, role=role_filter, department=dept_filter, search=search) }}">Next</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Submissions - {{ assignment.title }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('faculty.dashboard') }}" class="btn btn-outline-secondary btn-sm mb-3">
+        <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+    </a>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+            <h4 class="fw-bold mb-1">{{ assignment.title }}</h4>
+            <div class="d-flex flex-wrap gap-2 text-muted small align-items-center">
+                <span><i class="bi bi-building me-1"></i>{{ assignment.department }} (Year {{ assignment.year }})</span>
+                <span>•</span>
+                <span><i class="bi bi-award me-1"></i>Max Marks: {{ assignment.max_marks }}</span>
+                <span>•</span>
+                <span><i class="bi bi-clock me-1"></i>Deadline: {{ assignment.deadline|datetimeformat }}</span>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('reports.printable', assignment_id=assignment.id) }}" class="btn btn-outline-secondary btn-sm" target="_blank">
+                <i class="bi bi-printer me-1"></i> Print Report
+            </a>
+            <a href="{{ url_for('reports.export_csv', assignment_id=assignment.id) }}" class="btn btn-outline-success btn-sm">
+                <i class="bi bi-file-earmark-excel me-1"></i> Export CSV
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filters bar -->
+<div class="card p-3 border-0 shadow-sm mb-4">
+    <form method="GET" class="row g-2 align-items-center">
+        <div class="col-md-4">
+            <input type="text" class="form-control form-control-sm" placeholder="Search student or register #..." data-table-filter="#submissionsTable">
+        </div>
+        <div class="col-md-3">
+            <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Statuses</option>
+                <option value="Submitted" {% if status_filter == 'Submitted' %}selected{% endif %}>Submitted</option>
+                <option value="Under Review" {% if status_filter == 'Under Review' %}selected{% endif %}>Under Review</option>
+                <option value="Approved" {% if status_filter == 'Approved' %}selected{% endif %}>Approved</option>
+                <option value="Needs Revision" {% if status_filter == 'Needs Revision' %}selected{% endif %}>Needs Revision</option>
+                <option value="Rejected" {% if status_filter == 'Rejected' %}selected{% endif %}>Rejected</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="late" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="all" {% if late_filter == 'all' %}selected{% endif %}>All Submissions (Late & On-time)</option>
+                <option value="yes" {% if late_filter == 'yes' %}selected{% endif %}>Late Submissions Only</option>
+                <option value="no" {% if late_filter == 'no' %}selected{% endif %}>On-Time Submissions Only</option>
+            </select>
+        </div>
+        <div class="col-md-2 text-end">
+            <a href="{{ url_for('faculty.assignment_submissions', assignment_id=assignment.id) }}" class="btn btn-light btn-sm w-100">Reset</a>
+        </div>
+    </form>
+</div>
+
+<!-- Submissions Table -->
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="submissionsTable">
+            <thead>
+                <tr>
+                    <th>Student Name & Reg No</th>
+                    <th>Version</th>
+                    <th>Submitted At</th>
+                    <th>Timing</th>
+                    <th>Files</th>
+                    <th>Status</th>
+                    <th>Marks</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sub in submissions %}
+                <tr>
+                    <td>
+                        <div class="fw-semibold text-dark">{{ sub.student.name }}</div>
+                        <small class="text-muted">{{ sub.student.register_no or 'Reg# N/A' }} • {{ sub.student.email }}</small>
+                    </td>
+                    <td><span class="badge bg-light text-dark border">v{{ sub.version }}</span></td>
+                    <td>
+                        <div class="small fw-semibold">{{ sub.submitted_at|datetimeformat }}</div>
+                    </td>
+                    <td>
+                        {% if sub.is_late %}
+                        <span class="badge bg-danger"><i class="bi bi-alarm-fill me-1"></i>Late</span>
+                        {% else %}
+                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>On-Time</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('student.download_submission_file', submission_id=sub.id, file_type='report') }}" class="btn btn-outline-danger" title="Download Report PDF">
+                                <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                            </a>
+                            <a href="{{ url_for('student.download_submission_file', submission_id=sub.id, file_type='code') }}" class="btn btn-outline-primary" title="Download Source ZIP">
+                                <i class="bi bi-file-earmark-zip me-1"></i> ZIP
+                            </a>
+                        </div>
+                    </td>
+                    <td><span class="{{ sub.status|status_badge }}">{{ sub.status }}</span></td>
+                    <td>
+                        {% if sub.evaluation %}
+                        <span class="fw-bold text-success">{{ sub.evaluation.marks }}</span> / {{ assignment.max_marks }}
+                        {% else %}
+                        <span class="text-muted small">Not graded</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{{ url_for('faculty.evaluate_submission', submission_id=sub.id) }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-pencil-square me-1"></i>
+                            {% if sub.evaluation %}Edit Grade{% else %}Evaluate{% endif %}
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+                        No student submissions found matching the criteria.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

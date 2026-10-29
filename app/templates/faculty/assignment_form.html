@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+                <h4 class="fw-bold mb-1"><i class="bi bi-pencil-square text-primary me-2"></i>{{ title }}</h4>
+                <p class="text-muted small mb-0">Define assignment guidelines, target cohorts, deadlines, and project rubric</p>
+            </div>
+            <a href="{{ url_for('faculty.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+
+        <div class="card p-4 border-0 shadow-sm">
+            <form method="POST" enctype="multipart/form-data">
+                {{ form.hidden_tag() }}
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small text-muted">{{ form.title.label.text }} *</label>
+                    {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), placeholder="e.g. Distributed Database Management System") }}
+                    {% for err in form.title.errors %}
+                    <div class="text-danger small mt-1">{{ err }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small text-muted">{{ form.description.label.text }} *</label>
+                    {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows="5", placeholder="Detailed requirements, tech stack constraints, deliverables, rubric details...") }}
+                    {% for err in form.description.errors %}
+                    <div class="text-danger small mt-1">{{ err }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold small text-muted">{{ form.department.label.text }} *</label>
+                        {{ form.department(class="form-select" + (" is-invalid" if form.department.errors else "")) }}
+                        {% for err in form.department.errors %}
+                        <div class="text-danger small mt-1">{{ err }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold small text-muted">{{ form.year.label.text }} *</label>
+                        {{ form.year(class="form-select" + (" is-invalid" if form.year.errors else "")) }}
+                        {% for err in form.year.errors %}
+                        <div class="text-danger small mt-1">{{ err }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold small text-muted">{{ form.max_marks.label.text }} *</label>
+                        {{ form.max_marks(class="form-control" + (" is-invalid" if form.max_marks.errors else ""), step="0.5") }}
+                        {% for err in form.max_marks.errors %}
+                        <div class="text-danger small mt-1">{{ err }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold small text-muted">{{ form.deadline.label.text }} *</label>
+                        {{ form.deadline(class="form-control" + (" is-invalid" if form.deadline.errors else "")) }}
+                        <div class="form-text small">Select date and local deadline time.</div>
+                        {% for err in form.deadline.errors %}
+                        <div class="text-danger small mt-1">{{ err }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="mb-4 form-check form-switch p-3 bg-light rounded-3 ms-0">
+                    {{ form.allow_late(class="form-check-input ms-0 me-3") }}
+                    <label class="form-check-label fw-semibold text-dark" for="allow_late">
+                        Allow Late Submissions
+                    </label>
+                    <div class="text-muted small">
+                        If enabled, students can submit after the deadline, but will be flagged with a visible "Late" badge.
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold small text-muted">{{ form.attachment.label.text }} (Optional)</label>
+                    {{ form.attachment(class="form-control") }}
+                    <div class="form-text small">Allowed files: PDF, DOC, DOCX, ZIP, TXT (Max: 10MB)</div>
+                    {% if assignment and assignment.attachment_path %}
+                    <div class="mt-2 text-muted small">
+                        Current file: <strong>{{ assignment.attachment_filename }}</strong>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('faculty.dashboard') }}" class="btn btn-light px-4">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                        <i class="bi bi-save2 me-1"></i> Save Assignment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

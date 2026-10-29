@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+                <h4 class="fw-bold mb-1"><i class="bi bi-person-fill-gear text-primary me-2"></i>{{ title }}</h4>
+                <p class="text-muted small mb-0">Set credentials, department cohorts, and access control role</p>
+            </div>
+            <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to User List
+            </a>
+        </div>
+
+        <div class="card p-4 border-0 shadow-sm">
+            <form method="POST">
+                {{ form.hidden_tag() }}
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold small text-muted">{{ form.name.label.text }} *</label>
+                        {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), placeholder="Full Name") }}
+                        {% for err in form.name.errors %}
+                        <div class="text-danger small mt-1">{{ err }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold small text-muted">{{ form.email.label.text }} *</label>
+                        {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), placeholder="user@college.edu") }}
+                        {% for err in form.email.errors %}
+                        <div class="text-danger small mt-1">{{ err }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold small text-muted">{{ form.role.label.text }} *</label>
+                        {{ form.role(class="form-select" + (" is-invalid" if form.role.errors else ""), id="roleSelect") }}
+                        {% for err in form.role.errors %}
+                        <div class="text-danger small mt-1">{{ err }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold small text-muted">{{ form.register_no.label.text }}</label>
+                        {{ form.register_no(class="form-control" + (" is-invalid" if form.register_no.errors else ""), placeholder="Students only (e.g. CS202601)") }}
+                        {% for err in form.register_no.errors %}
+                        <div class="text-danger small mt-1">{{ err }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold small text-muted">{{ form.department.label.text }}</label>
+                        {{ form.department(class="form-select" + (" is-invalid" if form.department.errors else "")) }}
+                        {% for err in form.department.errors %}
+                        <div class="text-danger small mt-1">{{ err }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold small text-muted">{{ form.year.label.text }}</label>
+                        {{ form.year(class="form-select" + (" is-invalid" if form.year.errors else "")) }}
+                        {% for err in form.year.errors %}
+                        <div class="text-danger small mt-1">{{ err }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small text-muted">{{ form.password.label.text }}</label>
+                    {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), placeholder="••••••••") }}
+                    {% for err in form.password.errors %}
+                    <div class="text-danger small mt-1">{{ err }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-4 form-check">
+                    {{ form.is_active(class="form-check-input") }}
+                    <label class="form-check-label small fw-semibold text-dark" for="is_active">
+                        Account is Active and Allowed to Log In
+                    </label>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('admin.users') }}" class="btn btn-light px-4">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                        <i class="bi bi-save2 me-1"></i> Save User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

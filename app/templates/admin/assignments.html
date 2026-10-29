@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}All Assignments{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+        <h4 class="fw-bold mb-1"><i class="bi bi-journal-text text-primary me-2"></i>System-wide Assignments</h4>
+        <p class="text-muted small mb-0">Overview of all project assignments created by faculty across every academic department</p>
+    </div>
+    <div class="d-flex gap-2">
+        <input type="text" class="form-control form-control-sm" placeholder="Search assignments..." data-table-filter="#adminAssgTable" style="max-width: 250px;">
+    </div>
+</div>
+
+<div class="card p-3 border-0 shadow-sm mb-4">
+    <form method="GET" class="row g-2 align-items-center">
+        <div class="col-md-4">
+            <select name="department" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="all" {% if dept_filter == 'all' %}selected{% endif %}>All Departments</option>
+                <option value="Computer Science" {% if dept_filter == 'Computer Science' %}selected{% endif %}>Computer Science</option>
+                <option value="Information Technology" {% if dept_filter == 'Information Technology' %}selected{% endif %}>Information Technology</option>
+                <option value="Electronics & Communication" {% if dept_filter == 'Electronics & Communication' %}selected{% endif %}>Electronics & Communication</option>
+                <option value="Electrical & Electronics" {% if dept_filter == 'Electrical & Electronics' %}selected{% endif %}>Electrical & Electronics</option>
+                <option value="Mechanical Engineering" {% if dept_filter == 'Mechanical Engineering' %}selected{% endif %}>Mechanical Engineering</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <a href="{{ url_for('admin.assignments') }}" class="btn btn-light btn-sm w-100">Reset</a>
+        </div>
+    </form>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="adminAssgTable">
+            <thead>
+                <tr>
+                    <th>Title & Faculty</th>
+                    <th>Target Cohort</th>
+                    <th>Max Marks</th>
+                    <th>Deadline</th>
+                    <th>Submissions</th>
+                    <th>Late Submissions</th>
+                    <th>Attachment</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in assignments %}
+                <tr>
+                    <td>
+                        <div class="fw-semibold text-dark">{{ a.title }}</div>
+                        <small class="text-muted">Faculty: Prof. {{ a.faculty.name }} ({{ a.faculty.email }})</small>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border">{{ a.department }}</span>
+                        <div class="small text-muted">Year {{ a.year }}</div>
+                    </td>
+                    <td><span class="fw-semibold">{{ a.max_marks }}</span> pts</td>
+                    <td>
+                        <div class="small fw-semibold">{{ a.deadline|datetimeformat }}</div>
+                        <div class="countdown-timer" data-deadline="{{ a.deadline.isoformat() }}"></div>
+                    </td>
+                    <td>
+                        <span class="badge bg-primary px-3 py-1">
+                            {{ a.submissions|selectattr('is_latest')|list|length }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge {% if a.submissions|selectattr('is_late')|list|length > 0 %}bg-danger{% else %}bg-secondary{% endif %} px-2 py-1">
+                            {{ a.submissions|selectattr('is_late')|list|length }} Late
+                        </span>
+                    </td>
+                    <td>
+                        {% if a.attachment_path %}
+                        <a href="{{ url_for('student.download_assignment_attachment', assignment_id=a.id) }}" class="btn btn-sm btn-outline-primary" title="Download Guide">
+                            <i class="bi bi-paperclip"></i> File
+                        </a>
+                        {% else %}
+                        <span class="text-muted small">None</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center py-5 text-muted">No assignments found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

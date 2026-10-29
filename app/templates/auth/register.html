@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Student Registration{% endblock %}
+
+{% block public_content %}
+<div class="auth-wrapper">
+    <div class="auth-card card p-4 p-md-5 my-4">
+        <div class="text-center mb-4">
+            <div class="d-inline-flex p-3 rounded-circle bg-success bg-opacity-10 text-success mb-2">
+                <i class="bi bi-person-plus-fill fs-2"></i>
+            </div>
+            <h3 class="fw-bold text-dark">Student Registration</h3>
+            <p class="text-muted small">Create your student portal account to submit projects</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.register') }}">
+            {{ form.hidden_tag() }}
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold small text-muted">{{ form.name.label.text }}</label>
+                {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), placeholder="e.g. Alex Johnson") }}
+                {% for err in form.name.errors %}
+                <div class="text-danger small mt-1">{{ err }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold small text-muted">{{ form.register_no.label.text }}</label>
+                    {{ form.register_no(class="form-control" + (" is-invalid" if form.register_no.errors else ""), placeholder="e.g. CS202601") }}
+                    {% for err in form.register_no.errors %}
+                    <div class="text-danger small mt-1">{{ err }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold small text-muted">{{ form.email.label.text }}</label>
+                    {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), placeholder="alex@college.edu") }}
+                    {% for err in form.email.errors %}
+                    <div class="text-danger small mt-1">{{ err }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold small text-muted">{{ form.department.label.text }}</label>
+                    {{ form.department(class="form-select" + (" is-invalid" if form.department.errors else "")) }}
+                    {% for err in form.department.errors %}
+                    <div class="text-danger small mt-1">{{ err }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold small text-muted">{{ form.year.label.text }}</label>
+                    {{ form.year(class="form-select" + (" is-invalid" if form.year.errors else "")) }}
+                    {% for err in form.year.errors %}
+                    <div class="text-danger small mt-1">{{ err }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold small text-muted">{{ form.password.label.text }}</label>
+                    {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), placeholder="••••••••") }}
+                    {% for err in form.password.errors %}
+                    <div class="text-danger small mt-1">{{ err }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-6 mb-4">
+                    <label class="form-label fw-semibold small text-muted">{{ form.confirm_password.label.text }}</label>
+                    {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else ""), placeholder="••••••••") }}
+                    {% for err in form.confirm_password.errors %}
+                    <div class="text-danger small mt-1">{{ err }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-success w-100 py-2 fw-semibold shadow-sm">
+                <i class="bi bi-check-circle-fill me-1"></i> Register Account
+            </button>
+        </form>
+
+        <div class="mt-4 pt-3 border-top text-center">
+            <p class="small text-muted mb-0">
+                Already registered? 
+                <a href="{{ url_for('auth.login') }}" class="fw-semibold text-primary text-decoration-none">Sign In here</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
